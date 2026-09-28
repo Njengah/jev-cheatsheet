@@ -1,7 +1,5 @@
 # Jev Cheat Sheet
 
-> State in. Typed probabilities out. The policy stays in your code.
-
 Jev is TypeSafe's System One model. It does not write the reply, the summary, or the next line of a plan. You send state and typed questions. It returns a Choice, a Score, or a Noul, with probabilities. Choice and Score also return confidence.
 
 Use this sheet when you already know you want a judgment inside software and you need the request shape, the fields, and the patterns that hold up past a single demo call.
