@@ -76,6 +76,7 @@ Keys: [console.typesafe.ai/keys](https://console.typesafe.ai/keys).
 - Level 8: Models, the skill, and agents
 - Level 9: Limits, price, errors
 - Level 10: What to leave on an LLM
+- Ecosystem patterns
 - Reference tables
 - Troubleshooting
 
@@ -555,6 +556,68 @@ A type-safe answer is still allowed to be wrong. The schema cannot invent an opt
 | Huge state, weaker answers | The 64k and 32k budgets, and accuracy that shifts as state grows. Send the fields the questions name |
 
 ---
+
+## Ecosystem patterns
+
+Eighteen public projects, read in September 2026. The useful additions are the shapes they repeat. Linked repos are examples, not endorsements, and their benchmarks are theirs.
+
+### Code owns the clock. Jev advises.
+
+A control loop, a block, or a hook stays in ordinary code. Jev is called only when there is a judgment to make, on structured state, never on pixels. If the answer arrives late, or confidence is low, code already has a fallback.
+
+| Project | What it shows |
+| --- | --- |
+| [jev-drone](https://github.com/RomanSlack/jev-drone) | Camera becomes sectors and heights in code. Jev, at about 2.5 Hz, picks a maneuver. A 50 Hz reflex can veto it. Unchanged scenes reuse the last answer. |
+| [typesafe-mario](https://github.com/fhshaik/typesafe-mario) | Emulator RAM becomes JSON. Jev picks one legal button. No screenshot. |
+| [OneVOneJev](https://github.com/emrickgarrett/OneVOneJev) | Server-side tick. One fan-out for move, aim, and fire. A heuristic uses the same action interface if the API is down. |
+| [jev-trader](https://github.com/jarrodwatts/jev-trader) | One Choice per block. `hold` is what code emits when the model misses the block, not a model option the bot treats as a trade. |
+| [Canny](https://github.com/qkal/Canny) | Facts block. Judgments advise. A "done" claim is refused because no check passed, not because a probability crossed a line. |
+
+```text
+sense in code  ->  compact JSON  ->  one system_one call
+                                    ->  code applies, vetoes, or holds
+```
+
+### The option list is built from the world
+
+Do not hardcode a taxonomy when the candidates only exist at runtime. Put them in `criteria` for that call. Include `none` when the right move may be to do nothing.
+
+| Project | Candidates |
+| --- | --- |
+| [jev-ultrafast](https://github.com/browser-use/jev-ultrafast) | This page's elements. Operation and target are speculative questions in one request. A small LLM writes text only when the operation is `TYPE_TEXT`. |
+| [neo4jev](https://github.com/jexp/neo4jev) | This node's outgoing edges. A Noul ("goal reached?") rides along. Beam search ranks paths by the sum of log probabilities. |
+| [blink](https://github.com/ellipsis-dev/blink) | The files a walker can see. Many walkers vote on where the query lives. |
+| [json-render](https://github.com/vercel-labs/json-render) | UI candidates you already configured. Jev selects and orders them. It cannot invent a string prop you did not supply. Experimental, via Vercel AI Gateway as `typesafe-ai/jev`. |
+
+### Keep the text. Only delete.
+
+Compaction and curation fail when a model rewrites the evidence. These projects ask Jev what to keep, then copy the original bytes.
+
+| Project | What stays verbatim |
+| --- | --- |
+| [fast-jev-compaction](https://github.com/tamaratran/fast-jev-compaction) | Tool calls and results. Two Nouls per call: keep the call, keep the result. Questions are split across requests so each stays under the context budget. The same state is resent. |
+| [winnow](https://github.com/GhalebDweikat/winnow) | File blocks a Noul still wants. Uncertain blocks are kept. Error output is never hidden. A stub can restore what was hidden. |
+| [jev-curate](https://github.com/AkashPriyadarshii/jev-curate) | Dataset rows that pass a rubric. One fan-out per row. The row is not rewritten. |
+
+### Stage the judgments. Thresholds stay in code.
+
+[jev-review](https://github.com/devagrawal09/jev-review) does not ask "review this diff" once. It walks a matrix: risk Nouls, then file profile, then which hunk is evidence, then what kind of bug, then severity, then who should look. The next request exists because the previous answer chose the candidates.
+
+[killmyidea](https://github.com/monteduro/killmyidea) is the small version: eight Scores in one call, weights and the kill / fix / ship bands live in the app, the key stays on the server.
+
+### How people are wiring it in
+
+| Surface | Project | Use it for |
+| --- | --- | --- |
+| MCP tools | [jev-mcp](https://github.com/jkudish/jev-mcp) | Named jobs: verify, rerank, extract, audit, gate a diff. The tool list is a catalog of question shapes. |
+| MCP, plus local models | [system-one-connector](https://github.com/itsmostafa/system-one-connector) | The repo formerly at `itsmostafa/typesafe-mcp`. Same `evaluate` call against Jev, or against a model you host. |
+| Shell and CI | [semdecide](https://github.com/sharziki/semdecide) | `semdecide is '…'` prints a probability and exits like a predicate. No JSON parsing in the pipeline. |
+| Index of the rest | [awesome-jev-typesafe](https://github.com/valentynkit/awesome-jev-typesafe) | The living catalog. Do not copy it into this sheet. Link it. |
+
+```bash
+# Predicate in a pipeline. Threshold and exit code are the product.
+printf '%s' "$INCIDENT" | semdecide is 'This describes a plausible account takeover'
+```
 
 ## Contributing
 
